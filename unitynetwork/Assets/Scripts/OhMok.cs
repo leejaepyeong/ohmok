@@ -93,11 +93,11 @@ public class OhMok : MonoBehaviour
     public AudioClip se_setMark;
     public AudioClip se_win;
 
-    private static float SPACES_WIDTH = 512.0f;
-    private static float SPACES_HEIGHT = 512.0f;
+    private static float SPACES_WIDTH = 535.0f;
+    private static float SPACES_HEIGHT = 535.0f;
 
-    private static float WINDOW_WIDTH = 512.0f;
-    private static float WINDOW_HEIGHT = 512.0f;
+    private static float WINDOW_WIDTH = 535.0f;
+    private static float WINDOW_HEIGHT = 535.0f;
 
     private GameObject bgm;
 
@@ -278,7 +278,9 @@ public class OhMok : MonoBehaviour
     bool DoOwnTurn()
     {
 
+
         timer -= Time.deltaTime;
+        // 랜덤한 곳에 바둑돌 배치
         if(timer <= 0.0f)
         {
             timer = 0.0f;
@@ -291,12 +293,12 @@ public class OhMok : MonoBehaviour
             myPosition.x = xPos;
             myPosition.y = yPos;
         }
+        // 플레이어가 놓은 곳에 바둑돌 배
         else
         {
             // check click
             bool isClicked = Input.GetMouseButtonDown(0);
 
-            Debug.Log(isClicked);
 
             if(isClicked == false)
             {
@@ -304,6 +306,7 @@ public class OhMok : MonoBehaviour
             }
 
             Vector3 pos = Input.mousePosition;
+            Debug.Log(pos);
 
             myPosition = ConvertPositionToIndex(pos);
 
@@ -314,8 +317,7 @@ public class OhMok : MonoBehaviour
             }
 
         }
-
-
+        
 
         bool ret = SetMarkToSpace(myPosition, localMark);
 
@@ -371,17 +373,20 @@ public class OhMok : MonoBehaviour
 
         float sx = SPACES_WIDTH;
         float sy = SPACES_HEIGHT;
+        float field = 512f;
 
         float left = ((float)Screen.width - sx) * 0.5f;
         float top = ((float)Screen.height - sy) * 0.5f;
 
+        Debug.Log(top);
+
         float px = pos.x - left;
-        float py = pos.y - top;
+        float py = pos.y - top; 
 
 
         float divide = (float)rowNum;
-        px = (int)(px * divide / sx);
-        py = (int)(py * divide / sy);
+        px = (int)(px * divide / field);
+        py = (int)(py * divide / field);
 
         Debug.Log(px);
         Debug.Log(py);
@@ -390,14 +395,14 @@ public class OhMok : MonoBehaviour
         result.y = py;
         result.num = 0;
 
-        if(px < 0.0f || px > sx)
+        if(px < 0.0f || px > field)
         {
             result.num = -1;
             // out of board
             return result;
         }
 
-        if(py < 0.0f || py > sy)
+        if(py < 0.0f || py > field)
         {
             result.num = -1;
 
@@ -423,15 +428,16 @@ public class OhMok : MonoBehaviour
     {
         float sx = SPACES_WIDTH;
         float sy = SPACES_HEIGHT;
+        float field = 512.0f;
 
-        Rect rect = new Rect(Screen.width / 2 - WINDOW_WIDTH * 0.5f,
-                             Screen.height / 2 - WINDOW_HEIGHT * 0.5f,
+        Rect rect = new Rect((Screen.width - WINDOW_WIDTH) * 0.5f,
+                             (Screen.height - WINDOW_HEIGHT) * 0.5f,
                              WINDOW_WIDTH,
                              WINDOW_HEIGHT);
         Graphics.DrawTexture(rect, fieldTexture.texture);
 
-        float left = ((float)Screen.width - sx) * 0.5f;
-        float top = ((float)Screen.height - sy) * 0.5f;
+        float left = ((float)Screen.width - sx) * 0.5f + 23f;
+        float top = ((float)Screen.height - sy) * 0.5f + 23f;
 
         for (int i = 0; i < rowNum; i++)
         {
@@ -440,14 +446,15 @@ public class OhMok : MonoBehaviour
                 if(spaces[i,j] != -1)
                 {
                     float divide = (float)rowNum;
-                    float px = left + i * sx / divide;
-                    float py = top + j * sy / divide;
+                    float px = left + (i * field) / divide;
+                    float py = top + ((rowNum - j) * field) / divide;
 
                     Texture texture = (spaces[i, j] == 0) ? whiteTexture.texture : blackTexture.texture;
 
-                    float ofs = sx / divide * 0.1f;
+                    float ofs = field / divide * 0.1f;
+                    
 
-                    Graphics.DrawTexture(new Rect(px + ofs, py + ofs, sx * 0.8f / divide, sy * 0.8f / divide), texture);
+                    Graphics.DrawTexture(new Rect(px - ofs, py + ofs, (field * 0.8f) / divide, (field * 0.8f) / divide), texture);
                 }
             }
         }
@@ -528,27 +535,27 @@ public class OhMok : MonoBehaviour
 
     int CheckCount(int Mark, int x, int y, int ox, int oy, int step)
     {
-        if ((x < 0 || x > rowNum || y < 0 || y > rowNum) || Mark != spaces[x, y] || step == 5)
-            return step - 1;
+        if ((x < 0 || x > rowNum || y < 0 || y > rowNum) || Mark != spaces[x, y] || step == 4)
+            return step;
 
-
+        Debug.Log(step);
         return CheckCount(Mark, x + ox, y + oy, ox, oy, step + 1);
 
     }
 
     Winner CheckInPlacingMarks()
     {
-        
-
         int curMark = spaces[(int)myPosition.x, (int)myPosition.y];
+
+        
 
         // check col
         int ohmokCnt = 0;
 
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, 0, 1, 0);
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, 0, -1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y + 1, 0, 1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y - 1, 0, -1, 0);
 
-        if(ohmokCnt == 5)
+        if(ohmokCnt == 4)
         {
             return curMark == 0 ? Winner.White : Winner.Black;
         }
@@ -556,10 +563,10 @@ public class OhMok : MonoBehaviour
         // check row
         ohmokCnt = 0;
 
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, 1, 0, 0);
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, -1, 0, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x + 1, (int)myPosition.y, 1, 0, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x - 1, (int)myPosition.y, -1, 0, 0);
 
-        if (ohmokCnt == 5)
+        if (ohmokCnt == 4)
         {
             return curMark == 0 ? Winner.White : Winner.Black;
         }
@@ -567,10 +574,10 @@ public class OhMok : MonoBehaviour
         // check upRight
         ohmokCnt = 0;
 
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, 1, 1, 0);
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, -1, -1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x + 1, (int)myPosition.y + 1, 1, 1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x - 1, (int)myPosition.y - 1, -1, -1, 0);
 
-        if (ohmokCnt == 5)
+        if (ohmokCnt == 4)
         {
             return curMark == 0 ? Winner.White : Winner.Black;
         }
@@ -579,10 +586,10 @@ public class OhMok : MonoBehaviour
 
         ohmokCnt = 0;
 
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, -1, 1, 0);
-        ohmokCnt += CheckCount(curMark, (int)myPosition.x, (int)myPosition.y, -1, 1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x - 1, (int)myPosition.y + 1, -1, 1, 0);
+        ohmokCnt += CheckCount(curMark, (int)myPosition.x + 1, (int)myPosition.y - 1, 1, -1, 0);
 
-        if (ohmokCnt == 5)
+        if (ohmokCnt == 4)
         {
             return curMark == 0 ? Winner.White : Winner.Black;
         }

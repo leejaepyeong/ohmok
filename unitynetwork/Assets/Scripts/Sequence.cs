@@ -21,8 +21,8 @@ public class Sequence : MonoBehaviour
 	public Sprite bgTexture;
 	public Sprite pushTexture;
 
-	private static float WINDOW_WIDTH = 640.0f;
-	private static float WINDOW_HEIGHT = 480.0f;
+	private static float WINDOW_WIDTH = 535.0f;
+	private static float WINDOW_HEIGHT = 535.0f;
 
 	enum Mode
 	{
