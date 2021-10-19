@@ -47,7 +47,7 @@ public class OhMok : MonoBehaviour
 
     MyPosition myPosition;
 
-    private const int rowNum = 20;  // size of board
+    private const int rowNum = 19;  // size of board
     private const float waitTime = 1.0f;
     private const float turnTime = 10.0f;
 
@@ -72,7 +72,6 @@ public class OhMok : MonoBehaviour
     private bool isGameOver;
     private float currentTime;
 
-    private int[,] curPos = new int[1,1];
 
     // Network
     private TransportTCP m_transport = null;
@@ -93,11 +92,11 @@ public class OhMok : MonoBehaviour
     public AudioClip se_setMark;
     public AudioClip se_win;
 
-    private static float SPACES_WIDTH = 535.0f;
-    private static float SPACES_HEIGHT = 535.0f;
+    private static float SPACES_WIDTH = 542.0f;
+    private static float SPACES_HEIGHT = 542.0f;
 
-    private static float WINDOW_WIDTH = 535.0f;
-    private static float WINDOW_HEIGHT = 535.0f;
+    private static float WINDOW_WIDTH = 542.0f;
+    private static float WINDOW_HEIGHT = 542.0f;
 
     private GameObject bgm;
 
@@ -254,8 +253,10 @@ public class OhMok : MonoBehaviour
             bgm.GetComponent<AudioSource>().Stop();
 
             progress = GameProgress.Result;
-        }
 
+            return;
+        }
+        
         turn = (turn == Mark.White) ? Mark.Black : Mark.White;
         timer = turnTime;
         
@@ -306,7 +307,6 @@ public class OhMok : MonoBehaviour
             }
 
             Vector3 pos = Input.mousePosition;
-            Debug.Log(pos);
 
             myPosition = ConvertPositionToIndex(pos);
 
@@ -378,36 +378,36 @@ public class OhMok : MonoBehaviour
         float left = ((float)Screen.width - sx) * 0.5f;
         float top = ((float)Screen.height - sy) * 0.5f;
 
-        Debug.Log(top);
-
-        float px = pos.x - left;
-        float py = pos.y - top; 
+        float px = pos.x - left - 15f;
+        float py = pos.y - top - 15f; 
 
 
-        float divide = (float)rowNum;
-        px = (int)(px * divide / field);
-        py = (int)(py * divide / field);
+        int divide = rowNum;
+        int posX = (int)(px * divide / field);
+        int posY = (int)(py * divide / field);
 
-        Debug.Log(px);
-        Debug.Log(py);
+        
 
-        result.x = px;
-        result.y = py;
+        result.x = posX;
+        result.y = posY;
         result.num = 0;
 
-        if(px < 0.0f || px > field)
+        if(posX < 0 || posX > rowNum)
         {
             result.num = -1;
             // out of board
             return result;
         }
 
-        if(py < 0.0f || py > field)
+        if(posY < 0 || posY > rowNum)
         {
             result.num = -1;
 
             return result;
         }
+
+        Debug.Log("x" + posX);
+        Debug.Log("y" + posY);
 
         return result;
     }
@@ -436,8 +436,8 @@ public class OhMok : MonoBehaviour
                              WINDOW_HEIGHT);
         Graphics.DrawTexture(rect, fieldTexture.texture);
 
-        float left = ((float)Screen.width - sx) * 0.5f + 23f;
-        float top = ((float)Screen.height - sy) * 0.5f + 23f;
+        float left = ((float)Screen.width - sx) * 0.5f + 5f;
+        float top = ((float)Screen.height - sy) * 0.5f - 22.5f;
 
         for (int i = 0; i < rowNum; i++)
         {
@@ -445,16 +445,17 @@ public class OhMok : MonoBehaviour
             {
                 if(spaces[i,j] != -1)
                 {
-                    float divide = (float)rowNum;
+                    float divide = (float)rowNum - 1;
                     float px = left + (i * field) / divide;
                     float py = top + ((rowNum - j) * field) / divide;
 
                     Texture texture = (spaces[i, j] == 0) ? whiteTexture.texture : blackTexture.texture;
 
                     float ofs = field / divide * 0.1f;
-                    
 
-                    Graphics.DrawTexture(new Rect(px - ofs, py + ofs, (field * 0.8f) / divide, (field * 0.8f) / divide), texture);
+                    divide += 1;
+
+                    Graphics.DrawTexture(new Rect(px, py, (field * 0.8f) / divide, (field * 0.8f) / divide), texture);
                 }
             }
         }
@@ -462,8 +463,14 @@ public class OhMok : MonoBehaviour
         if(localMark == turn)
         {
             float offset = (localMark == Mark.White) ? -94.0f : sx + 36.0f;
-            rect = new Rect(left + offset, top + 5.0f, 68.0f, 136.0f);
+            rect = new Rect(left + offset, top + 5.0f, 64.0f, 127.0f);
             Graphics.DrawTexture(rect, youTexture.texture);
+
+            
+            rect = new Rect(left + offset + 15f, top - 35.0f, 35f, 35f);
+            Texture texture = (localMark == Mark.White) ? whiteTexture.texture : blackTexture.texture;
+
+            Graphics.DrawTexture(rect, texture);
         }
 
     }
@@ -477,7 +484,7 @@ public class OhMok : MonoBehaviour
 
         // 순서 텍스처 표시.
         float offset = (localMark == Mark.White) ? -94.0f : sx + 36.0f;
-        Rect rect = new Rect(left + offset, top + 5.0f, 68.0f, 136.0f);
+        Rect rect = new Rect(left + offset, top + 5.0f, 64.0f, 127.0f);
         Graphics.DrawTexture(rect, youTexture.texture);
 
         // 결과 표시.
@@ -489,8 +496,8 @@ public class OhMok : MonoBehaviour
             Graphics.DrawTexture(rect, winTexture.texture);
         }
 
-        if (localMark == Mark.White && winner == Winner.White ||
-            localMark == Mark.Black && winner == Winner.Black)
+        if (localMark == Mark.White && winner != Winner.White ||
+            localMark == Mark.Black && winner != Winner.Black)
         {
             Graphics.DrawTexture(rect, loseTexture.texture);
         }
@@ -535,10 +542,9 @@ public class OhMok : MonoBehaviour
 
     int CheckCount(int Mark, int x, int y, int ox, int oy, int step)
     {
-        if ((x < 0 || x > rowNum || y < 0 || y > rowNum) || Mark != spaces[x, y] || step == 4)
+        if ((x < 0 || x > rowNum - 1 || y < 0 || y > rowNum - 1) || Mark != spaces[x, y] || step == 4)
             return step;
 
-        Debug.Log(step);
         return CheckCount(Mark, x + ox, y + oy, ox, oy, step + 1);
 
     }

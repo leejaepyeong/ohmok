@@ -21,8 +21,8 @@ public class Sequence : MonoBehaviour
 	public Sprite bgTexture;
 	public Sprite pushTexture;
 
-	private static float WINDOW_WIDTH = 535.0f;
-	private static float WINDOW_HEIGHT = 535.0f;
+	private static float WINDOW_WIDTH = 542.0f;
+	private static float WINDOW_HEIGHT = 542.0f;
 
 	enum Mode
 	{
@@ -251,7 +251,7 @@ public class Sequence : MonoBehaviour
 		// 버튼을 누르세요.
 		if (blink && m_counter % 120 > 20)
 		{
-			Rect pushRect = new Rect(84, 335, 220, 25);
+			Rect pushRect = new Rect(84, 335, 225, 25);
 			Graphics.DrawTexture(pushRect, pushTexture.texture);
 		}
 	}
