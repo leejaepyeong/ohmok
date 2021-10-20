@@ -18,11 +18,20 @@ public class Sequence : MonoBehaviour
 
 	private int m_counter = 0;
 
+	[SerializeField]
+	private GameObject game;
+
+	[SerializeField]
+	private GameObject WaitPlayer;
+
 	public Sprite bgTexture;
 	public Sprite pushTexture;
 
 	private static float WINDOW_WIDTH = 542.0f;
 	private static float WINDOW_HEIGHT = 542.0f;
+
+
+
 
 	enum Mode
 	{
@@ -141,15 +150,12 @@ public class Sequence : MonoBehaviour
 		{
 			m_mode = Mode.Game;
 
-			GameObject game = GameObject.Find("Ohmok");
 			game.GetComponent<OhMok>().GameStart();
 		}
 	}
 
 	void OnUpdateGame()
 	{
-		GameObject game = GameObject.Find("Ohmok");
-
 		if (game.GetComponent<OhMok>().IsGameOver() == true)
 		{
 			m_mode = Mode.Disconnection;
@@ -189,20 +195,21 @@ public class Sequence : MonoBehaviour
 		// 배경 표시.
 		DrawBg(true);
 
-		if (GUI.Button(new Rect(20, 290, 150, 20), "대전 상대를 기다립니다"))
+		if (GUI.Button(new Rect(20, 290, 150, 30), "대전 상대를 기다립니다"))
 		{
 			hostType = HostType.Server;
 		}
 
 		// 클라이언트를 선택했을 때 접속할 서버 주소를 입력합니다.
-		if (GUI.Button(new Rect(20, 380, 150, 20), "대전 상대와 접속합니다"))
+		if (GUI.Button(new Rect(20, 380, 150, 30), "대전 상대와 접속합니다"))
 		{
 			hostType = HostType.Client;
 		}
 
-		Rect labelRect = new Rect(20, 410, 200, 30);
+		Rect labelRect = new Rect(20, 440, 260, 50);
 		GUIStyle style = new GUIStyle();
 		style.fontStyle = FontStyle.Bold;
+		style.fontSize = 35;
 		style.normal.textColor = Color.white;
 		GUI.Label(labelRect, "상대방 IP 주소", style);
 		labelRect.y -= 2;
@@ -210,7 +217,13 @@ public class Sequence : MonoBehaviour
 		style.normal.textColor = Color.black;
 		GUI.Label(labelRect, "상대방 IP 주소", style);
 
-		serverAddress = GUI.TextField(new Rect(20, 430, 200, 20), serverAddress);
+		style.normal.textColor = Color.red;
+		style.fontSize = 30;
+		style.border.left = 100;
+		style.border.top = 100;
+
+
+		serverAddress = GUI.TextField(new Rect(20, 510, 260, 10), serverAddress, style);
 	}
 
 
@@ -220,7 +233,13 @@ public class Sequence : MonoBehaviour
 		DrawBg(false);
 
 		// 클라이언트를 선택했을 때 접속할 서버 주소를 입력합니다.
-		GUI.Button(new Rect(84, 335, 160, 20), "대전 상대를 기다립니다");
+		GUI.Button(new Rect(84, 335, 160, 30), "대전 상대를 기다립니다");
+
+		if(GUI.Button(new Rect(84, 365, 160, 30), "대기를 취소합니다"))
+        {
+			m_mode = Mode.SelectHost;
+			hostType = HostType.None;
+        }
 	}
 
 	void OnGUICError()
