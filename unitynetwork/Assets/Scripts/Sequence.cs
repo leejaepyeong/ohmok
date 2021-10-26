@@ -16,22 +16,23 @@ public class Sequence : MonoBehaviour
 
 	private TransportTCP m_transport = null;
 
-	private int m_counter = 0;
-
 	[SerializeField]
 	private GameObject game;
 
 	[SerializeField]
-	private GameObject WaitPlayer;
+	private GameObject TitlePanel;
+	[SerializeField]
+	private GameObject waitPanel;
+	[SerializeField]
+	private GameObject connectPanel;
+	[SerializeField]
+	private GameObject selectPanel;
+
+
+	[SerializeField]
+	private GameObject connetErrorTxt;
 
 	public Sprite bgTexture;
-	public Sprite pushTexture;
-
-	private static float WINDOW_WIDTH = 542.0f;
-	private static float WINDOW_HEIGHT = 542.0f;
-
-
-
 
 	enum Mode
 	{
@@ -90,7 +91,6 @@ public class Sequence : MonoBehaviour
 				break;
 		}
 
-		++m_counter;
 	}
 
 	//
@@ -103,7 +103,6 @@ public class Sequence : MonoBehaviour
 				break;
 
 			case Mode.Connection:
-				OnGUIConnection();
 				break;
 
 			case Mode.Game:
@@ -150,6 +149,7 @@ public class Sequence : MonoBehaviour
 		{
 			m_mode = Mode.Game;
 
+			TitlePanel.SetActive(false);
 			game.GetComponent<OhMok>().GameStart();
 		}
 	}
@@ -172,12 +172,21 @@ public class Sequence : MonoBehaviour
 				break;
 
 			case HostType.Client:
-				m_transport.Disconnect();
+				if(m_transport.IsConnected())
+                {
+					m_transport.Disconnect();
+				}
+				
 				break;
 
 			default:
 				break;
 		}
+
+		TitlePanel.SetActive(true);
+		waitPanel.SetActive(false);
+		connectPanel.SetActive(false);
+		selectPanel.SetActive(true);
 
 		m_mode = Mode.SelectHost;
 		hostType = HostType.None;
@@ -193,85 +202,39 @@ public class Sequence : MonoBehaviour
 	void OnGUISelectHost()
 	{
 		// 배경 표시.
-		DrawBg(true);
+		//DrawBg(true);
 
-		if (GUI.Button(new Rect(20, 290, 150, 30), "대전 상대를 기다립니다"))
-		{
-			hostType = HostType.Server;
-		}
-
-		// 클라이언트를 선택했을 때 접속할 서버 주소를 입력합니다.
-		if (GUI.Button(new Rect(20, 380, 150, 30), "대전 상대와 접속합니다"))
-		{
-			hostType = HostType.Client;
-		}
-
-		Rect labelRect = new Rect(20, 440, 260, 50);
-		GUIStyle style = new GUIStyle();
-		style.fontStyle = FontStyle.Bold;
-		style.fontSize = 35;
-		style.normal.textColor = Color.white;
-		GUI.Label(labelRect, "상대방 IP 주소", style);
-		labelRect.y -= 2;
-		style.fontStyle = FontStyle.Normal;
-		style.normal.textColor = Color.black;
-		GUI.Label(labelRect, "상대방 IP 주소", style);
-
-		style.normal.textColor = Color.red;
-		style.fontSize = 30;
-		style.border.left = 100;
-		style.border.top = 100;
-
-
-		serverAddress = GUI.TextField(new Rect(20, 510, 260, 10), serverAddress, style);
+		serverAddress = GUI.TextField(new Rect(20,430,200,20),serverAddress);
 	}
 
+	/// <summary>
+    /// 이미 만들어진 서버에 접속을 시도합니다
+    /// </summary>
+	public void ConnentBtn()
+    {
+		hostType = HostType.Client;
+    }
 
-	void OnGUIConnection()
-	{
-		// 배경 표시.
-		DrawBg(false);
+	/// <summary>
+    /// 게임을 만들어 접속자를 기다립니다.
+    /// </summary>
+	public void MakeServerBtn()
+    {
+		hostType = HostType.Server;
+    }
 
-		// 클라이언트를 선택했을 때 접속할 서버 주소를 입력합니다.
-		GUI.Button(new Rect(84, 335, 160, 30), "대전 상대를 기다립니다");
 
-		if(GUI.Button(new Rect(84, 365, 160, 30), "대기를 취소합니다"))
-        {
-			m_mode = Mode.SelectHost;
-			hostType = HostType.None;
-        }
-	}
 
 	void OnGUICError()
 	{
-		// 배경 표시.
-		DrawBg(false);
-
-		float px = Screen.width * 0.5f - 150.0f;
-		float py = Screen.height * 0.5f;
-
-		if (GUI.Button(new Rect(px, py, 300, 80), "접속할 수 없습니다.\n\n버튼을 누르세요"))
-		{
-			m_mode = Mode.SelectHost;
-			hostType = HostType.None;
-		}
+		connetErrorTxt.SetActive(true);
 	}
 
-	// 배경 표시.
-	void DrawBg(bool blink)
-	{
-		// 배경을 그립니다.
-		Rect bgRect = new Rect(Screen.width / 2 - WINDOW_WIDTH * 0.5f,
-							 Screen.height / 2 - WINDOW_HEIGHT * 0.5f,
-							 WINDOW_WIDTH,
-							 WINDOW_HEIGHT);
-		Graphics.DrawTexture(bgRect, bgTexture.texture);
+	public void BackBtn()
+    {
+		connetErrorTxt.SetActive(false);
+		m_mode = Mode.SelectHost;
+		hostType = HostType.None;
+    }
 
-		// 버튼을 누르세요.
-		if (blink && m_counter % 120 > 20)
-		{
-			Rect pushRect = new Rect(84, 335, 225, 25);
-			Graphics.DrawTexture(pushRect, pushTexture.texture);
-		}
-	}
 }

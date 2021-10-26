@@ -78,20 +78,22 @@ public class OhMok : MonoBehaviour
 
     private float step_count = 0.0f;
 
-
+    [SerializeField]
+    private GameObject GameOverPanel;
 
     public Sprite fieldTexture; // board
-    public Sprite whiteTexture;
-    public Sprite blackTexture;
-    public Sprite youTexture;
-    public Sprite winTexture;
-    public Sprite loseTexture;
+    public Sprite whiteTexture; // 흰돌
+    public Sprite blackTexture; // 검은돌
+    public Sprite youTexture; // 턴 텍스쳐
+    public Sprite winTexture; // 승리
+    public Sprite loseTexture; // 패배
 
     public AudioSource audio;
     public AudioClip se_click;
     public AudioClip se_setMark;
     public AudioClip se_win;
 
+    // 전체 오목판 크기
     private static float SPACES_WIDTH = 542.0f;
     private static float SPACES_HEIGHT = 542.0f;
 
@@ -100,7 +102,7 @@ public class OhMok : MonoBehaviour
 
     private GameObject bgm;
 
-
+    private int myNum = 0;
 
     private void Start()
     {
@@ -162,17 +164,16 @@ public class OhMok : MonoBehaviour
                     style.fontSize = 30;
 
                     // position, name, type
-                    if(GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2, 200,200),"끝",style))
+                    if (GUI.Button(new Rect(Screen.width / 2 - 100, Screen.height / 2, 200,200),"끝",style))
                     {
                         progress = GameProgress.GameOver;
                         step_count = 0.0f;
+                        GameOverPanel.SetActive(true);
                     }
                 }
                 break;
 
             case GameProgress.GameOver:
-                DrawFieldAndMarks();
-                DrawWinner();
                 break;
 
             case GameProgress.Disconnect:
@@ -261,20 +262,6 @@ public class OhMok : MonoBehaviour
         timer = turnTime;
         
     }
-
-    void UpdateGameOver()
-    {
-        step_count += Time.deltaTime;
-
-        if(step_count > 1.0f)
-        {
-            Reset();
-            isGameOver = true;
-        }
-
-
-    }
-
     // My turn doing
     bool DoOwnTurn()
     {
@@ -406,8 +393,6 @@ public class OhMok : MonoBehaviour
             return result;
         }
 
-        Debug.Log("x" + posX);
-        Debug.Log("y" + posY);
 
         return result;
     }
@@ -429,6 +414,7 @@ public class OhMok : MonoBehaviour
         float sx = SPACES_WIDTH;
         float sy = SPACES_HEIGHT;
         float field = 512.0f;
+
 
         Rect rect = new Rect((Screen.width - WINDOW_WIDTH) * 0.5f,
                              (Screen.height - WINDOW_HEIGHT) * 0.5f,
@@ -610,10 +596,27 @@ public class OhMok : MonoBehaviour
         return Winner.None;
     }
 
+    void UpdateGameOver()
+    {
+        step_count += Time.deltaTime;
+
+        if (step_count > 1.0f)
+        {
+            Reset();
+        }
+
+        GetNum();
+
+        if (myNum == 2)
+        {
+            Debug.Log("ResetGame");
+            GameStart();
+        }
+    }
+
     void Reset()
     {
         turn = Mark.White;
-        progress = GameProgress.None;
 
         for (int i = 0; i < rowNum; i++)
         {
@@ -624,9 +627,57 @@ public class OhMok : MonoBehaviour
         }
     }
 
+    public void ReStartBtn()
+    {
+        myNum += 1;
+
+        byte[] buffer = new byte[1];
+        buffer[0] = (byte)1;
+        m_transport.Send(buffer, buffer.Length);
+
+        GameOverPanel.SetActive(false);
+    }
+
+    public void TitleBtn()
+    {
+        byte[] buffer = new byte[1];
+        buffer[0] = (byte)0;
+        m_transport.Send(buffer, buffer.Length);
+
+        isGameOver = true;
+
+        GameOverPanel.SetActive(false);
+    }
+
+
+    private void GetNum()
+    {
+        byte[] buffer = new byte[1];
+        int recvSize = m_transport.Receive(ref buffer, buffer.Length);
+
+        if (recvSize <= 0)
+        {
+            // nothing get
+            return;
+        }
+
+        if (buffer[0] == 1)
+            myNum += buffer[0];
+        else if (buffer[0] == 0)
+        {
+            isGameOver = true;
+            GameOverPanel.SetActive(false);
+        }
+            
+
+    }
+
+
     public void GameStart()
     {
         progress = GameProgress.Ready;
+
+        myNum = 0;
 
         turn = Mark.White;
 
@@ -648,6 +699,7 @@ public class OhMok : MonoBehaviour
     {
         return isGameOver;
     }
+
 
     public void EventCallback(NetEventState state)
     {
